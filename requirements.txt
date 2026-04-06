@@ -1,0 +1,5 @@
+flask
+psutil
+pyngrok
+requests
+ansi2html
