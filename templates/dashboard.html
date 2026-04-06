@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+
+<link rel="stylesheet" href="/static/css/style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+<title>MC Panel</title>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>⛏️ MC Panel</h2>
+
+  <button onclick="showPage('dashboard')">🏠 Dashboard</button>
+  <button onclick="showPage('console')">💻 Console</button>
+  <button onclick="showPage('players')">👥 Players</button>
+  <button onclick="showPage('plugins')">🔌 Plugins</button>
+  <button onclick="showPage('files')">📁 Files</button>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<h2 id="ip">Loading...</h2>
+
+<button class="btn btn-green" onclick="startServer()">Start</button>
+<button class="btn btn-red" onclick="stopServer()">Stop</button>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page active">
+
+<div class="card">
+  Status: <span id="status">Offline</span>
+</div>
+
+<div class="card">
+  Players: <span id="playerCount">0</span>
+</div>
+
+<canvas id="ramChart"></canvas>
+<canvas id="tpsChart"></canvas>
+
+</div>
+
+<!-- CONSOLE -->
+<div id="console" class="page">
+<h3>Console</h3>
+
+<div id="console-output"></div>
+
+<input id="cmd" placeholder="command">
+<button onclick="sendCmd()">Send</button>
+</div>
+
+<!-- PLAYERS -->
+<div id="players" class="page">
+<h3>Players</h3>
+<div id="player-list"></div>
+</div>
+
+<!-- PLUGINS -->
+<div id="plugins" class="page">
+<h3>Plugins</h3>
+
+<input id="plugin-search">
+<button onclick="searchPlugin()">Search</button>
+
+<div id="plugin-results"></div>
+</div>
+
+<!-- FILES -->
+<div id="files" class="page">
+<h3>Files</h3>
+
+<div id="upload-box">Drop files here</div>
+
+<div id="file-list"></div>
+
+<div id="editor" style="height:400px;"></div>
+<button onclick="saveFile()">Save</button>
+
+</div>
+
+</div>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+<script src="/static/js/app.js"></script>
+<script src="/static/js/console.js"></script>
+<script src="/static/js/charts.js"></script>
+<script src="/static/js/editor.js"></script>
+<script src="/static/js/theme.js"></script>
+
+</body>
+            </html>
