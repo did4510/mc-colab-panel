@@ -28,10 +28,10 @@ Run a Minecraft server with a professional web panel in Google Colab.
 
 ---
 
-## 🖥️ Manual Run (Local / VPS)
+## 🖥️ Manual Run in Google colab
 
 ```bash
-git clone https://github.com/did4510/mc-colab-panel.git
-cd mc-colab-panel
-pip install -r requirements.txt
-python app.py
+!git clone https://github.com/did4510/mc-colab-panel.git
+%cd mc-colab-panel
+!pip install -r requirements.txt
+!python app.py
