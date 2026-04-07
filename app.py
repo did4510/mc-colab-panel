@@ -29,7 +29,8 @@ os.chdir(BASE_DIR)
 
 ADMIN_USER = "admin"
 ADMIN_PASS = "1234"
-NGROK_AUTH_TOKEN = "PUT_YOUR_TOKEN"
+import os
+NGROK_AUTH_TOKEN = os.getenv("NGROK_AUTH_TOKEN")
 
 # =====================================
 # ⚙️ INSTALL JAVA (SAFE)
