@@ -183,8 +183,25 @@ def panel():
 # ⚡ API ROUTES
 # =====================================
 
-@app.route("/start")
-def start():
+@app.route("/stats")
+def stats():
+    ram = round(psutil.virtual_memory().used/1e9,2)
+
+    ram_history.append(ram)
+    if len(ram_history)>30:
+        ram_history.pop(0)
+
+    tps = 20 if running else 0
+    tps_history.append(tps)
+    if len(tps_history)>30:
+        tps_history.pop(0)
+
+    return jsonify({
+        "ram": ram_history,
+        "tps": tps_history,
+        "ip": mc_ip if running else "Server Offline",
+        "running": running
+    })
     start_server()
     return "ok"
 
