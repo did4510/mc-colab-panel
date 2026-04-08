@@ -1,5 +1,5 @@
 # =====================================
-# 🚀 FINAL SAFE VERSION (ALL FEATURES KEPT)
+# 🚀 MC PANEL FINAL (AUTO VERSION + MAX RAM)
 # =====================================
 
 import os, subprocess, threading, psutil, time, requests
@@ -8,7 +8,18 @@ from pyngrok import ngrok
 from ansi2html import Ansi2HTMLConverter
 
 # =====================================
-# 📁 ENV
+# ⚙️ CONFIG (LIKE COLAB CELL)
+# =====================================
+
+MC_VERSION = "1.21.1"   # 🔥 CHANGE VERSION HERE
+SERVER_TYPE = "paper"   # paper / (future: purpur, vanilla)
+
+ADMIN_USER = "admin"
+ADMIN_PASS = "1234"
+NGROK_AUTH_TOKEN = os.getenv("NGROK_AUTH_TOKEN")
+
+# =====================================
+# 📁 ENV SETUP
 # =====================================
 
 try:
@@ -22,14 +33,6 @@ os.makedirs(BASE_DIR, exist_ok=True)
 os.chdir(BASE_DIR)
 
 # =====================================
-# 🔐 CONFIG
-# =====================================
-
-ADMIN_USER = "admin"
-ADMIN_PASS = "1234"
-NGROK_AUTH_TOKEN = os.getenv("NGROK_AUTH_TOKEN")
-
-# =====================================
 # ☕ JAVA
 # =====================================
 
@@ -38,18 +41,34 @@ if not os.path.exists("/usr/bin/java"):
     os.system("apt-get install openjdk-21-jdk -y > /dev/null")
 
 # =====================================
-# 📦 SERVER
+# 📦 DOWNLOAD SERVER (AUTO VERSION)
 # =====================================
 
-if not os.path.exists("server.jar"):
-    api = "https://api.papermc.io/v2/projects/paper/versions/1.21.1"
-    builds = requests.get(api).json()["builds"]
-    latest = builds[-1]
+def download_server():
+    if os.path.exists("server.jar"):
+        return
 
-    jar = f"https://api.papermc.io/v2/projects/paper/versions/1.21.1/builds/{latest}/downloads/paper-1.21.1-{latest}.jar"
-    open("server.jar","wb").write(requests.get(jar).content)
+    print(f"📦 Downloading {SERVER_TYPE} {MC_VERSION}...")
 
-open("eula.txt","w").write("eula=true")
+    if SERVER_TYPE == "paper":
+        api = f"https://api.papermc.io/v2/projects/paper/versions/{MC_VERSION}"
+        builds = requests.get(api).json()["builds"]
+        latest = builds[-1]
+
+        jar_url = f"https://api.papermc.io/v2/projects/paper/versions/{MC_VERSION}/builds/{latest}/downloads/paper-{MC_VERSION}-{latest}.jar"
+
+    else:
+        raise Exception("Unsupported server type")
+
+    open("server.jar", "wb").write(requests.get(jar_url).content)
+
+download_server()
+
+# =====================================
+# 📜 AUTO EULA
+# =====================================
+
+open("eula.txt", "w").write("eula=true")
 
 # =====================================
 # 🧠 STATE
@@ -67,6 +86,18 @@ tps_hist = []
 
 mc_ip = "Server Offline"
 mc_tunnel = None
+
+# =====================================
+# 🧠 RAM AUTO DETECT
+# =====================================
+
+def get_max_ram():
+    total_gb = psutil.virtual_memory().total / (1024**3)
+
+    # keep 1GB safe for system
+    usable = max(1, int(total_gb - 1))
+
+    return f"{usable}G"
 
 # =====================================
 # 📜 LOG PARSER
@@ -88,7 +119,7 @@ def colorize(line):
     return line
 
 # =====================================
-# 🚀 SERVER CONTROL
+# 🚀 SERVER CONTROL (MAX RAM)
 # =====================================
 
 def start_server():
@@ -97,8 +128,11 @@ def start_server():
     if running:
         return
 
+    ram = get_max_ram()
+    print(f"🚀 Starting with RAM: {ram}")
+
     server = subprocess.Popen(
-        ["java","-Xmx6G","-Xms6G","-jar","server.jar","nogui"],
+        ["java", f"-Xmx{ram}", f"-Xms{ram}", "-jar","server.jar","nogui"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
