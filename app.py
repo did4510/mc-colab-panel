@@ -132,11 +132,14 @@ def start_server():
     print(f"🚀 Starting with RAM: {ram}")
 
     server = subprocess.Popen(
-        ["java", f"-Xmx{ram}", f"-Xms{ram}", "-jar","server.jar","nogui"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True
+    ["/usr/lib/jvm/java-21-openjdk-amd64/bin/java",
+     f"-Xmx{ram}",
+     f"-Xms{ram}",
+     "-jar", "server.jar", "nogui"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True
     )
 
     running = True
