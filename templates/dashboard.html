@@ -9,12 +9,88 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://unpkg.com/monaco-editor@0.45.0/min/vs/loader.js"></script>
 <link rel="stylesheet" href="/static/css/style.css">
+<link rel="stylesheet" href="/static/css/enhanced.css">
 </head>
 <body>
 
 <div class="bg-grid"></div>
 <div class="bg-glow-1"></div>
 <div class="bg-glow-2"></div>
+
+<!-- SERVER SELECT MODAL -->
+<div class="modal-overlay" id="serverModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-icon">⚙️</div>
+      <div>
+        <h2 class="modal-title">Server Configuration</h2>
+        <p class="modal-sub">Choose your Minecraft server type and version</p>
+      </div>
+      <button class="modal-close" onclick="closeServerModal()">✕</button>
+    </div>
+
+    <div class="modal-drive-status" id="modalDriveStatus">
+      <div class="drive-status-icon" id="driveIcon">⏳</div>
+      <div class="drive-status-info">
+        <span class="drive-status-label" id="driveLabel">Checking Google Drive...</span>
+        <span class="drive-status-path" id="drivePath"></span>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label class="modal-label">Server Software</label>
+      <div class="type-grid" id="typeGrid">
+        <button class="type-btn active" data-type="paper" onclick="selectType(this)">
+          <span class="type-icon">📄</span>
+          <span class="type-name">Paper</span>
+          <span class="type-desc">Recommended · High Performance</span>
+        </button>
+        <button class="type-btn" data-type="purpur" onclick="selectType(this)">
+          <span class="type-icon">💜</span>
+          <span class="type-name">Purpur</span>
+          <span class="type-desc">Paper fork · Extra features</span>
+        </button>
+        <button class="type-btn" data-type="vanilla" onclick="selectType(this)">
+          <span class="type-icon">🌿</span>
+          <span class="type-name">Vanilla</span>
+          <span class="type-desc">Official Mojang server</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <label class="modal-label">Minecraft Version</label>
+      <div class="version-grid" id="versionGrid"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeServerModal()">Cancel</button>
+      <button class="modal-apply" onclick="applyServerConfig()">
+        <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        Apply &amp; Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- FILE ACTION MODAL (rename) -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-icon">✏️</div>
+      <div><h2 class="modal-title">Rename File</h2></div>
+      <button class="modal-close" onclick="document.getElementById('renameModal').classList.remove('open')">✕</button>
+    </div>
+    <div style="padding:0 24px 24px">
+      <label class="modal-label">New Name</label>
+      <input id="renameInput" class="rename-input" placeholder="filename.txt" onkeydown="if(event.key==='Enter')confirmRename()">
+    </div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="document.getElementById('renameModal').classList.remove('open')">Cancel</button>
+      <button class="modal-apply" onclick="confirmRename()">Rename</button>
+    </div>
+  </div>
+</div>
 
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
@@ -28,48 +104,51 @@
     </div>
   </div>
 
-  <div class="server-badge" id="serverBadge">
-    <div class="badge-dot offline" id="badgeDot"></div>
-    <div class="badge-info">
-      <span class="badge-name">Paper MC 1.21.1</span>
-      <span class="badge-status" id="badgeStatus">Offline</span>
+  <!-- Server Selection Card -->
+  <div class="server-select-card" onclick="openServerModal()">
+    <div class="ssc-top">
+      <div class="ssc-badge" id="sscBadge">
+        <div class="badge-dot offline" id="badgeDot"></div>
+        <div class="badge-info">
+          <span class="badge-name" id="sscName">Paper 1.21.1</span>
+          <span class="badge-status" id="badgeStatus">Offline</span>
+        </div>
+      </div>
+      <div class="ssc-edit-btn">
+        <svg viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Change
+      </div>
+    </div>
+    <div class="drive-mini-status" id="driveMiniStatus">
+      <span class="drive-mini-dot" id="driveMiniDot">●</span>
+      <span id="driveMiniLabel">Checking Drive...</span>
     </div>
   </div>
 
   <nav class="nav">
     <div class="nav-label">NAVIGATION</div>
     <button class="nav-btn active" onclick="showPage('dashboard', this)">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/></svg>
-      </span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/></svg></span>
       Dashboard
       <span class="nav-arrow">›</span>
     </button>
     <button class="nav-btn" onclick="showPage('console', this)">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><polyline points="4 17 10 11 4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      </span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><polyline points="4 17 10 11 4 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
       Console
       <span class="nav-arrow">›</span>
     </button>
     <button class="nav-btn" onclick="showPage('players', this)">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2"/></svg>
-      </span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="2"/></svg></span>
       Players
       <span class="nav-arrow">›</span>
     </button>
     <button class="nav-btn" onclick="showPage('plugins', this)">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" stroke="currentColor" stroke-width="2"/><line x1="16" y1="8" x2="2" y2="22" stroke="currentColor" stroke-width="2"/></svg>
-      </span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" stroke="currentColor" stroke-width="2"/><line x1="16" y1="8" x2="2" y2="22" stroke="currentColor" stroke-width="2"/></svg></span>
       Plugins
       <span class="nav-arrow">›</span>
     </button>
     <button class="nav-btn" onclick="showPage('files', this)">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/></svg>
-      </span>
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/></svg></span>
       Files
       <span class="nav-arrow">›</span>
     </button>
@@ -127,47 +206,32 @@
 
       <div class="stats-row">
         <div class="stat-card s0">
-          <div class="sc-top">
-            <span class="sc-label">STATUS</span>
-            <div class="sc-icon green-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </div>
+          <div class="sc-top"><span class="sc-label">STATUS</span>
+            <div class="sc-icon green-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
           </div>
           <div class="sc-val" id="statusValue">Offline</div>
           <div class="sc-sub">Server process</div>
           <div class="sc-bar"><div class="sc-fill" id="statusFill" style="width:0%;background:var(--red)"></div></div>
         </div>
-
         <div class="stat-card s1">
-          <div class="sc-top">
-            <span class="sc-label">PLAYERS</span>
-            <div class="sc-icon blue-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg>
-            </div>
+          <div class="sc-top"><span class="sc-label">PLAYERS</span>
+            <div class="sc-icon blue-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg></div>
           </div>
           <div class="sc-val" id="playerCount">0</div>
           <div class="sc-sub">Online now</div>
           <div class="sc-bar"><div class="sc-fill" id="playerFill" style="width:0%;background:var(--accent2)"></div></div>
         </div>
-
         <div class="stat-card s2">
-          <div class="sc-top">
-            <span class="sc-label">RAM USAGE</span>
-            <div class="sc-icon yellow-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><rect x="2" y="7" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M6 7V5M10 7V5M14 7V5M18 7V5M6 17v2M10 17v2M14 17v2M18 17v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            </div>
+          <div class="sc-top"><span class="sc-label">RAM USAGE</span>
+            <div class="sc-icon yellow-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><rect x="2" y="7" width="20" height="10" rx="2" stroke="currentColor" stroke-width="2"/><path d="M6 7V5M10 7V5M14 7V5M18 7V5M6 17v2M10 17v2M14 17v2M18 17v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
           </div>
           <div class="sc-val" id="ramValue">0 GB</div>
           <div class="sc-sub">Memory used</div>
           <div class="sc-bar"><div class="sc-fill" id="ramFill" style="width:0%;background:var(--yellow)"></div></div>
         </div>
-
         <div class="stat-card s3">
-          <div class="sc-top">
-            <span class="sc-label">TPS</span>
-            <div class="sc-icon accent-icon">
-              <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
+          <div class="sc-top"><span class="sc-label">TPS</span>
+            <div class="sc-icon accent-icon"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           </div>
           <div class="sc-val" id="tpsValue">20.0</div>
           <div class="sc-sub">Ticks/second</div>
@@ -177,17 +241,11 @@
 
       <div class="charts-row">
         <div class="chart-card">
-          <div class="chart-top">
-            <h3>RAM Usage</h3>
-            <span class="chart-badge">GB</span>
-          </div>
+          <div class="chart-top"><h3>RAM Usage</h3><span class="chart-badge">GB</span></div>
           <canvas id="ramChart"></canvas>
         </div>
         <div class="chart-card">
-          <div class="chart-top">
-            <h3>TPS Performance</h3>
-            <span class="chart-badge good">t/s</span>
-          </div>
+          <div class="chart-top"><h3>TPS Performance</h3><span class="chart-badge good">t/s</span></div>
           <canvas id="tpsChart"></canvas>
         </div>
       </div>
@@ -201,11 +259,7 @@
       </div>
       <div class="console-box">
         <div class="console-topbar">
-          <div class="win-dots">
-            <span class="wd red"></span>
-            <span class="wd yellow"></span>
-            <span class="wd green"></span>
-          </div>
+          <div class="win-dots"><span class="wd red"></span><span class="wd yellow"></span><span class="wd green"></span></div>
           <span class="con-file">server.log</span>
           <button class="con-clear" onclick="document.getElementById('console-output').innerHTML=''">Clear</button>
         </div>
@@ -225,10 +279,7 @@
         <p class="page-desc">Online players &amp; management</p>
       </div>
       <div class="online-bar">
-        <div class="pulse-wrap">
-          <div class="pulse-ring"></div>
-          <div class="pulse-core"></div>
-        </div>
+        <div class="pulse-wrap"><div class="pulse-ring"></div><div class="pulse-core"></div></div>
         <span id="onlineCount">0 players online</span>
       </div>
       <div id="player-list" class="player-grid"></div>
@@ -264,12 +315,13 @@
     <div id="files" class="page">
       <div class="page-header">
         <h1 class="page-title">File Manager</h1>
-        <p class="page-desc">Browse, edit &amp; upload server files</p>
+        <p class="page-desc">Browse, edit, rename &amp; delete server files</p>
       </div>
       <div class="files-layout">
         <div class="file-sidebar-panel">
           <div class="fsp-header">
             <h3>Server Files</h3>
+            <button class="fsp-refresh" onclick="loadFiles()" title="Refresh">↻</button>
           </div>
           <div id="upload-box" class="upload-zone" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
             <svg viewBox="0 0 24 24" fill="none" width="28" height="28"><polyline points="16 16 12 12 8 16" stroke="currentColor" stroke-width="2"/><line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="2"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3" stroke="currentColor" stroke-width="2"/></svg>
@@ -303,8 +355,9 @@
 <script src="/static/js/plugins.js"></script>
 <script src="/static/js/upload.js"></script>
 <script src="/static/js/theme.js"></script>
+<script src="/static/js/servermodal.js"></script>
 <script>
-const pageNames = { dashboard: 'Dashboard', console: 'Console', players: 'Players', plugins: 'Plugins', files: 'Files' };
+const pageNames = { dashboard:'Dashboard', console:'Console', players:'Players', plugins:'Plugins', files:'Files' };
 
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
