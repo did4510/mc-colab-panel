@@ -1,86 +1,45 @@
 // =============================================
-// 🚀 UPDATED PANEL LOGIC (WITH ANIMATION)
+// MC COLAB PANEL — upload.js
+// Drag-and-drop + click-to-upload
 // =============================================
 
-let dots = 0
-
-async function startServer() {
-  document.getElementById('startBtn').disabled = true;
-  await fetch('/start');
-  showToast('Server starting...', 'start');
-  setTimeout(() => document.getElementById('startBtn').disabled = false, 3000);
+function handleDrop(e) {
+  e.preventDefault();
+  const files = e.dataTransfer.files;
+  if (files.length) uploadFiles(files);
 }
 
-async function stopServer() {
-  document.getElementById('stopBtn').disabled = true;
-  await fetch('/stop');
-  showToast('Server stopping...', 'stop');
-  setTimeout(() => document.getElementById('stopBtn').disabled = false, 3000);
-}
+async function uploadFiles(files) {
+  const box = document.getElementById('upload-box');
+  box.style.borderColor = 'var(--accent)';
+  box.style.background  = 'rgba(34,211,238,0.06)';
 
-async function updateStats() {
-  try {
-    const s = await fetch('/stats').then(r => r.json());
-
-    // =========================
-    // 🎯 STATUS LOGIC (UPDATED)
-    // =========================
-    let statusText = "Offline"
-    let online = false
-
-    if (s.starting) {
-      dots = (dots + 1) % 4
-      statusText = "Starting" + ".".repeat(dots)
-    } 
-    else if (s.running) {
-      statusText = "Online"
-      online = true
+  let successCount = 0;
+  for (const file of files) {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      await fetch('/upload', { method: 'POST', body: fd });
+      successCount++;
+    } catch (e) {
+      showToast('Upload failed: ' + file.name, 'error');
     }
+  }
 
-    // Badge
-    const dot = document.getElementById('badgeDot');
-    const badgeStatus = document.getElementById('badgeStatus');
+  box.style.borderColor = '';
+  box.style.background  = '';
 
-    if (online) {
-      dot.classList.add('online');
-      badgeStatus.textContent = 'Online';
-    } else if (s.starting) {
-      dot.classList.remove('online');
-      badgeStatus.textContent = statusText;
-    } else {
-      dot.classList.remove('online');
-      badgeStatus.textContent = 'Offline';
-    }
-
-    // Status bar
-    document.getElementById('statusValue').textContent = statusText;
-    document.getElementById('statusFill').style.width = online ? '100%' : '20%';
-    document.getElementById('statusFill').style.background =
-      online ? 'var(--green)' : s.starting ? 'var(--yellow)' : 'var(--red)';
-
-    // =========================
-    // 🌐 IP (FIXED)
-    // =========================
-    document.getElementById('ipValue').textContent = s.ip || 'Loading...';
-
-    // =========================
-    // RAM
-    // =========================
-    const ram = s.ram?.length ? s.ram[s.ram.length - 1] : 0;
-    document.getElementById('ramValue').textContent = ram.toFixed(2) + ' GB';
-    document.getElementById('ramFill').style.width = Math.min((ram / 8) * 100, 100) + '%';
-
-    // =========================
-    // TPS
-    // =========================
-    const tps = s.tps?.length ? s.tps[s.tps.length - 1] : 20;
-    document.getElementById('tpsValue').textContent = tps.toFixed(1);
-    document.getElementById('tpsFill').style.width = Math.min((tps / 20) * 100, 100) + '%';
-
-  } catch (e) {
-    console.error('Stats error:', e);
+  if (successCount > 0) {
+    showToast(`Uploaded ${successCount} file${successCount > 1 ? 's' : ''}`);
+    loadFiles();
   }
 }
 
-setInterval(updateStats, 2000);
-updateStats();
+// Click to upload
+document.getElementById('upload-box').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.onchange = e => uploadFiles(e.target.files);
+  input.click();
+});
