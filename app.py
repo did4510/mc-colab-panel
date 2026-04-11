@@ -157,7 +157,8 @@ if NGROK_AUTH_TOKEN:
     ngrok.set_auth_token(NGROK_AUTH_TOKEN)
     PANEL_URL = ngrok.connect(5000).public_url
 else:
-    PANEL_URL = "http://localhost:5000  ⚠️ set NGROK_AUTH_TOKEN for public URL"
+    print("❌ NGROK AUTH TOKEN NOT SET — TCP WILL FAIL")
+    PANEL_URL = "http://localhost:5000 (NO PUBLIC ACCESS)"
 conv = Ansi2HTMLConverter(inline=True)
 
 @app.route("/", methods=["GET","POST"])
@@ -179,25 +180,98 @@ def logout(): session.clear(); return redirect("/")
 @app.route("/start")
 def start():
     global starting, mc_ip, mc_tunnel
+
     version = request.args.get("version", current_version)
-    stype   = request.args.get("type",    current_type)
-    if running or starting: return "busy"
-    starting = True; mc_ip = "Starting..."
+    stype   = request.args.get("type", current_type)
+
+    if running or starting:
+        return "busy"
+
+    starting = True
+    mc_ip = "Starting server..."
+
     def run():
         global starting, mc_ip, mc_tunnel
-        start_server(version, stype); time.sleep(4)
-        try: mc_tunnel = ngrok.connect(25565,"tcp"); mc_ip = mc_tunnel.public_url.replace("tcp://","")
-        except: mc_ip = "Tunnel Error"
+
+        try:
+            print("🚀 Starting Minecraft server...")
+            start_server(version, stype)
+
+            # ⏳ Wait for server to fully start
+            print("⏳ Waiting for server to boot...")
+            time.sleep(15)
+
+            # 🧹 Clean old tunnels (VERY IMPORTANT)
+            try:
+                ngrok.kill()
+                print("🧹 Cleaned old ngrok tunnels")
+            except:
+                pass
+
+            # 🌐 Create TCP tunnel
+            print("🌐 Creating ngrok TCP tunnel...")
+            mc_tunnel = ngrok.connect(25565, "tcp")
+
+            if not mc_tunnel or not mc_tunnel.public_url:
+                raise Exception("No tunnel URL returned")
+
+            # ✅ Format IP
+            mc_ip = mc_tunnel.public_url.replace("tcp://", "")
+
+            print("✅ MC SERVER IP:", mc_ip)
+
+        except Exception as e:
+            mc_ip = f"Tunnel Error: {str(e)}"
+            print("❌ ERROR:", e)
+
         starting = False
-    threading.Thread(target=run, daemon=True).start(); return "ok"
+
+    threading.Thread(target=run, daemon=True).start()
+    return "ok"
 
 @app.route("/stop")
 def stop():
-    global starting, mc_ip
-    stop_server(); starting = False; mc_ip = "Server Offline"
-    if mc_tunnel:
-        try: ngrok.disconnect(mc_tunnel.public_url)
-        except: pass
+    global starting, mc_ip, mc_tunnel, running
+
+    print("🛑 Stopping Minecraft server...")
+
+    try:
+        # Stop Minecraft server
+        if server and running:
+            try:
+                server.stdin.write("stop\n")
+                server.stdin.flush()
+                print("📴 Stop command sent to server")
+            except Exception as e:
+                print("⚠️ Could not send stop command:", e)
+
+            time.sleep(5)
+
+            if server.poll() is None:
+                print("⚠️ Force killing server...")
+                server.kill()
+
+        running = False
+
+    except Exception as e:
+        print("❌ Server stop error:", e)
+
+    # 🔌 Close ngrok tunnel completely
+    try:
+        if mc_tunnel:
+            print("🌐 Closing ngrok tunnel:", mc_tunnel.public_url)
+            ngrok.disconnect(mc_tunnel.public_url)
+
+        ngrok.kill()  # 💥 ensures ALL tunnels are closed
+        print("✅ ngrok fully stopped")
+
+    except Exception as e:
+        print("⚠️ ngrok disconnect error:", e)
+
+    mc_tunnel = None
+    mc_ip = "Server Offline"
+    starting = False
+
     return "ok"
 
 @app.route("/cmd", methods=["POST"])
