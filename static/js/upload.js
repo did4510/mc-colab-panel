@@ -18,6 +18,7 @@ async function uploadFiles(files) {
   for (const file of files) {
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('path', currentPath); // Send the current directory path
     try {
       await fetch('/upload', { method: 'POST', body: fd });
       successCount++;

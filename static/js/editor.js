@@ -3,7 +3,7 @@
 // File manager with rename, delete, edit, save
 // =============================================
 
-let editor, currentFile = '';
+let editor, currentFile = '', currentPath = '.';
 let renameTarget = '';
 
 require.config({ paths: { vs: 'https://unpkg.com/monaco-editor@0.45.0/min/vs' } });
@@ -22,6 +22,7 @@ require(['vs/editor/editor.main'], function () {
     padding: { top: 12, bottom: 12 },
     smoothScrolling: true,
     cursorSmoothCaretAnimation: true,
+    automaticLayout: true, // Auto resize with container
   });
 });
 
@@ -48,57 +49,77 @@ function isEditable(name) {
   return editableExts.includes(ext);
 }
 
-async function loadFiles() {
+async function loadFiles(path = currentPath) {
   try {
-    const files = await fetch('/files_json').then(r => r.json());
+    currentPath = path;
+    const files = await fetch('/files_json?path=' + encodeURIComponent(path)).then(r => r.json());
     const list  = document.getElementById('file-list');
 
-    if (!files.length) {
+    if (files.error) {
+      list.innerHTML = `<div style="padding:16px;text-align:center;color:var(--yellow);font-size:12px">${files.error}</div>`;
+      return;
+    }
+
+    let html = '';
+    if (path !== '.' && path !== './' && path !== '') {
+      const parent = path.split('/').slice(0, -1).join('/') || '.';
+      html += `
+        <div class="file-item-row" onclick="loadFiles('${parent}')">
+          <div class="fi-main">
+            <span class="fi-icon">🔙</span>
+            <span class="fi-name">.. (back)</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!files.length && path === '.') {
       list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px">No files found</div>';
       return;
     }
 
-    list.innerHTML = files.map(f => `
-      <div class="file-item-row ${currentFile === f.name ? 'active' : ''}" id="fi-${CSS.escape(f.name)}">
-        <div class="fi-main" onclick="${f.is_dir ? '' : `openFile('${f.name}')`}" style="${f.is_dir ? 'cursor:default;opacity:0.7' : ''}">
+    html += files.map(f => `
+      <div class="file-item-row ${currentFile === f.path ? 'active' : ''}" id="fi-${CSS.escape(f.path)}">
+        <div class="fi-main" onclick="${f.is_dir ? `loadFiles('${f.path}')` : `openFile('${f.path}')`}">
           <span class="fi-icon">${fileIcon(f.name, f.is_dir)}</span>
           <span class="fi-name">${f.name}</span>
           <span class="fi-size">${f.is_dir ? 'dir' : formatFileSize(f.size)}</span>
         </div>
         <div class="fi-actions">
           ${!f.is_dir && isEditable(f.name) ? `
-          <button class="fi-btn fi-edit" title="Edit" onclick="openFile('${f.name}')">
+          <button class="fi-btn fi-edit" title="Edit" onclick="openFile('${f.path}')">
             <svg viewBox="0 0 24 24" fill="none" width="12" height="12"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>` : ''}
-          <button class="fi-btn fi-rename" title="Rename" onclick="startRename('${f.name}')">
+          <button class="fi-btn fi-rename" title="Rename" onclick="startRename('${f.path}')">
             <svg viewBox="0 0 24 24" fill="none" width="12" height="12"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
-          <button class="fi-btn fi-delete" title="Delete" onclick="deleteFile('${f.name}')">
+          <button class="fi-btn fi-delete" title="Delete" onclick="deleteFile('${f.path}')">
             <svg viewBox="0 0 24 24" fill="none" width="12" height="12"><polyline points="3 6 5 6 21 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10 11v6M14 11v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
     `).join('');
+    list.innerHTML = html;
   } catch (e) {
     console.error('Files error:', e);
   }
 }
 
-async function openFile(name) {
-  if (!isEditable(name)) {
+async function openFile(path) {
+  if (!isEditable(path)) {
     showToast('Cannot edit this file type', 'error');
     return;
   }
-  currentFile = name;
-  document.getElementById('editorFilename').textContent = name;
+  currentFile = path;
+  document.getElementById('editorFilename').textContent = path;
   // Highlight active
   document.querySelectorAll('.file-item-row').forEach(r => r.classList.remove('active'));
-  const row = document.getElementById('fi-' + CSS.escape(name));
+  const row = document.getElementById('fi-' + CSS.escape(path));
   if (row) row.classList.add('active');
 
   try {
-    const content = await fetch('/file?name=' + encodeURIComponent(name)).then(r => r.text());
-    const ext = name.split('.').pop().toLowerCase();
+    const content = await fetch('/file?name=' + encodeURIComponent(path)).then(r => r.text());
+    const ext = path.split('.').pop().toLowerCase();
     const langMap = {
       js:'javascript', ts:'typescript', py:'python', json:'json',
       yml:'yaml', yaml:'yaml', xml:'xml', html:'html', css:'css',
@@ -109,7 +130,7 @@ async function openFile(name) {
       editor.setValue(content);
       monaco.editor.setModelLanguage(editor.getModel(), langMap[ext] || 'plaintext');
     }
-    showToast('Opened: ' + name);
+    showToast('Opened: ' + path);
   } catch (e) {
     showToast('Error opening file', 'error');
   }
