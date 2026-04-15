@@ -829,13 +829,35 @@ body {
 .upload-hint { font-size: 10px; color: var(--muted2); }
 
 .file-list-inner { flex: 1; overflow-y: auto; padding: 6px; }
-.file-item {
-  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
-  border-radius: 8px; cursor: pointer; font-size: 12.5px; color: var(--muted);
-  transition: all var(--tr); margin-bottom: 2px;
+.file-item-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 10px; border-radius: 8px; margin-bottom: 2px;
+  transition: all var(--tr); color: var(--muted);
 }
-.file-item:hover { background: var(--surface2); color: var(--text); }
-.file-item.active { background: rgba(34,211,238,0.1); color: var(--accent); }
+.file-item-row:hover { background: var(--surface2); color: var(--text); }
+.file-item-row.active { background: rgba(34,211,238,0.1); color: var(--accent); }
+
+.fi-main {
+  display: flex; align-items: center; gap: 10px; flex: 1;
+  cursor: pointer; overflow: hidden; min-width: 0;
+}
+.fi-icon { flex-shrink: 0; display: flex; align-items: center; }
+.fi-name {
+  font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fi-size { font-size: 10px; color: var(--muted2); margin-left: auto; padding-right: 8px; }
+
+.fi-actions { display: flex; align-items: center; gap: 4px; opacity: 0; transition: opacity var(--tr); }
+.file-item-row:hover .fi-actions { opacity: 1; }
+
+.fi-btn {
+  background: none; border: none; padding: 5px; border-radius: 5px;
+  color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all var(--tr);
+}
+.fi-btn:hover { background: var(--surface3); color: var(--text); }
+.fi-btn.fi-delete:hover { color: #f87171; background: rgba(248,113,113,0.1); }
+.fi-btn.fi-edit:hover { color: var(--accent); background: rgba(34,211,238,0.1); }
 
 .editor-area {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
