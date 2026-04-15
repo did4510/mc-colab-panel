@@ -34,4 +34,6 @@ Run a Minecraft server with a professional web panel in Google Colab.
 !git clone https://github.com/did4510/mc-colab-panel.git
 %cd mc-colab-panel
 !pip install -r requirements.txt
+import os
+os.environ["NGROK_AUTH_TOKEN"] = "ngrok_auth_token"
 !python app.py
