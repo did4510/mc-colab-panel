@@ -24,11 +24,8 @@ async function updateConsole() {
     
     // Only update if there are new logs
     if (data.new_count > 0) {
-      data.logs.forEach(logLine => {
-        // Parse ANSI colors and convert to HTML spans
-        const htmlLine = parseAndStyleLog(logLine);
-        
-        // Create a new log entry div
+      data.logs.forEach(htmlLine => {
+        // Server already converted ANSI codes to HTML spans
         const logEntry = document.createElement('div');
         logEntry.className = 'log-entry';
         logEntry.innerHTML = htmlLine;
@@ -50,20 +47,6 @@ async function updateConsole() {
   }
 }
 
-function parseAndStyleLog(line) {
-  // Remove existing HTML to prevent injection
-  const div = document.createElement('div');
-  div.textContent = line;
-  let text = div.innerHTML;
-  
-  // Convert ANSI color codes to HTML
-  // \x1b[31m = red (ERROR), \x1b[33m = yellow (WARN), \x1b[32m = green (JOIN/LEAVE)
-  text = text.replace(/\x1b\[31m(.*?)\x1b\[0m/g, '<span class="log-error">$1</span>');
-  text = text.replace(/\x1b\[33m(.*?)\x1b\[0m/g, '<span class="log-warn">$1</span>');
-  text = text.replace(/\x1b\[32m(.*?)\x1b\[0m/g, '<span class="log-success">$1</span>');
-  
-  return text;
-}
 
 function sendCmd() {
   const input = document.getElementById('cmd');
@@ -82,4 +65,3 @@ function sendCmd() {
 
 // Update console more frequently for smooth streaming
 setInterval(updateConsole, 500);  // 500ms for smooth real-time feel
-
