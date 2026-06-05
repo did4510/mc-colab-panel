@@ -16,7 +16,7 @@ from ansi2html import Ansi2HTMLConverter
 MC_VERSION        = "1.21.1"
 SERVER_TYPE       = "paper"
 ADMIN_USER        = "admin"
-ADMIN_PASS        = "1234"
+ADMIN_PASS        = "admin"
 panel_tunnel = None
 mc_tunnel = None
 NGROK_AUTH_TOKEN  = os.getenv("NGROK_AUTH_TOKEN", "")
@@ -309,7 +309,19 @@ def set_server():
     return jsonify({"ok":True,"version":current_version,"type":current_type})
 
 @app.route("/logs")
-def get_logs(): return conv.convert("<br>".join(logs), full=False)
+def get_logs(): 
+    return conv.convert("<br>".join(logs), full=False)
+
+@app.route("/logs-stream")
+def get_logs_stream():
+    """Returns logs as JSON for smooth streaming - only new logs since last_index"""
+    last_index = request.args.get('since', 0, type=int)
+    new_logs = logs[last_index:] if last_index < len(logs) else []
+    return jsonify({
+        "logs": new_logs,
+        "total": len(logs),
+        "new_count": len(new_logs)
+    })
 
 @app.route("/stats")
 def stats():
