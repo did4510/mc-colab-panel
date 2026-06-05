@@ -1112,9 +1112,12 @@ body {
 .toast.stop  { border-color: rgba(251,191,36,0.4); color: var(--yellow); }
 
 /* ── LOG ENTRY COLORS (override safety) ───────────── */
-.ptero-output .log-entry            { color: #94a3b8 !important; }
-.ptero-output .log-entry.log-error  { color: #f87171 !important; }
-.ptero-output .log-entry.log-warn   { color: #fbbf24 !important; }
-.ptero-output .log-entry.log-success{ color: #4ade80 !important; }
-.ptero-output .log-entry.log-join   { color: #a78bfa !important; }
-.ptero-output .log-entry.log-chat   { color: #38bdf8 !important; }
+.ptero-output .log-entry             { color: #94a3b8 !important; }
+.ptero-output .log-entry.log-error   { color: #f87171 !important; }
+.ptero-output .log-entry.log-warn    { color: #fbbf24 !important; }
+.ptero-output .log-entry.log-join    { color: #a78bfa !important; }
+.ptero-output .log-entry.log-leave   { color: #94a3b8 !important; }
+.ptero-output .log-entry.log-chat    { color: #38bdf8 !important; }
+.ptero-output .log-entry.log-done    { color: #4ade80 !important; }
+.ptero-output .log-entry.log-plugin  { color: #818cf8 !important; }
+.ptero-output .log-entry.log-success { color: #4ade80 !important; }

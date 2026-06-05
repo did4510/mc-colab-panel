@@ -805,11 +805,14 @@ body {
 }
 .log-entry:hover { background: rgba(255,255,255,0.04); }
 
-.log-entry.log-error   { color: #f87171 !important; }
-.log-entry.log-warn    { color: #fbbf24 !important; }
-.log-entry.log-success { color: #4ade80 !important; }
-.log-entry.log-join    { color: #a78bfa !important; }
-.log-entry.log-chat    { color: #38bdf8 !important; }
+.log-entry.log-error   { color: #f87171 !important; }  /* red    — ERROR/Exception  */
+.log-entry.log-warn    { color: #fbbf24 !important; }  /* yellow — WARN             */
+.log-entry.log-join    { color: #a78bfa !important; }  /* purple — joined the game  */
+.log-entry.log-leave   { color: #94a3b8 !important; }  /* muted  — left the game    */
+.log-entry.log-chat    { color: #38bdf8 !important; }  /* cyan   — <Player> chat    */
+.log-entry.log-done    { color: #4ade80 !important; }  /* green  — server ready     */
+.log-entry.log-plugin  { color: #818cf8 !important; }  /* indigo — plugin messages  */
+.log-entry.log-success { color: #4ade80 !important; }  /* green  — misc success     */
 
 .ptero-placeholder {
   display: flex;
