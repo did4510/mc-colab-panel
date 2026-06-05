@@ -317,8 +317,10 @@ def get_logs_stream():
     """Returns logs as JSON for smooth streaming - only new logs since last_index"""
     last_index = request.args.get('since', 0, type=int)
     new_logs = logs[last_index:] if last_index < len(logs) else []
+    # Convert ANSI color codes to HTML spans (same as /logs route)
+    html_logs = [conv.convert(line, full=False) for line in new_logs]
     return jsonify({
-        "logs": new_logs,
+        "logs": html_logs,
         "total": len(logs),
         "new_count": len(new_logs)
     })
