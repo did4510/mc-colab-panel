@@ -144,10 +144,13 @@ def start_server(version, stype):
     )
     running = True; current_version = version; current_type = stype
     def read():
+        global running
         for line in server.stdout:
             line = line.strip(); parse_log(line)
             logs.append(colorize(line))
             if len(logs) > 500: logs.pop(0)
+        # stdout closed -> process exited (crash or clean stop)
+        running = False
     threading.Thread(target=read, daemon=True).start()
 
 def stop_server():
@@ -155,6 +158,14 @@ def stop_server():
     if server:
         try: server.stdin.write("stop\n"); server.stdin.flush()
         except: pass
+        # Wait up to 15s for clean shutdown, then kill
+        for _ in range(30):
+            if server.poll() is not None:
+                break
+            time.sleep(0.5)
+        else:
+            try: server.kill()
+            except: pass
     running = False
 
 def send_cmd(cmd):
@@ -317,8 +328,10 @@ def get_logs_stream():
     """Returns logs as JSON for smooth streaming - only new logs since last_index"""
     last_index = request.args.get('since', 0, type=int)
     new_logs = logs[last_index:] if last_index < len(logs) else []
+    # Convert ANSI color codes to HTML spans (same as /logs route)
+    html_logs = [conv.convert(line, full=False) for line in new_logs]
     return jsonify({
-        "logs": new_logs,
+        "logs": html_logs,
         "total": len(logs),
         "new_count": len(new_logs)
     })
