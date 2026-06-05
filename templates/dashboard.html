@@ -386,30 +386,40 @@
       </div>
     </div>
 
-    <!-- ── CONSOLE PAGE ──────────────────────────── -->
+    <!-- ── CONSOLE PAGE ──────────────────── -->
     <div id="console" class="page">
-      <div class="page-header">
-        <div>
-          <h1 class="page-title">Console</h1>
-          <p class="page-desc">Live server output &amp; command input</p>
-        </div>
-      </div>
-      <div class="console-box">
-        <div class="console-topbar">
-          <div class="win-dots">
-            <span class="wd red"></span>
-            <span class="wd yellow"></span>
-            <span class="wd green"></span>
+      <div class="ptero-con-wrap">
+
+        <!-- Status bar -->
+        <div class="ptero-status-bar">
+          <div class="ptero-status-left">
+            <span class="ptero-indicator" id="pteroIndicator"></span>
+            <span class="ptero-status-label" id="pteroStatusLabel">Offline</span>
           </div>
-          <span class="con-file">server.log</span>
-          <button class="con-clear" onclick="clearConsole()">Clear</button>
+          <div class="ptero-status-right">
+            <span class="ptero-meta" id="pteroVersion">v—</span>
+            <span class="ptero-meta-sep">•</span>
+            <span class="ptero-meta" id="pteroType">—</span>
+            <button class="ptero-clear-btn" onclick="clearConsole()" title="Clear console">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Clear
+            </button>
+          </div>
         </div>
-        <div id="console-output" class="con-output"></div>
-        <div class="con-input-row">
-          <span class="con-prompt">$</span>
-          <input id="cmd" class="con-input" placeholder="Type a command and press Enter..." onkeydown="if(event.key==='Enter')sendCmd()">
-          <button class="con-send" onclick="sendCmd()">Send</button>
+
+        <!-- Log output -->
+        <div id="console-output" class="ptero-output"></div>
+
+        <!-- Input row -->
+        <div class="ptero-input-wrap">
+          <span class="ptero-prompt">&#x276F;</span>
+          <input id="cmd" class="ptero-input"
+            placeholder="Enter a server command..."
+            onkeydown="if(event.key==='Enter')sendCmd()"
+            autocomplete="off" spellcheck="false">
+          <button class="ptero-send" onclick="sendCmd()">Send</button>
         </div>
+
       </div>
     </div>
 

@@ -323,15 +323,17 @@ def set_server():
 def get_logs(): 
     return conv.convert("<br>".join(logs), full=False)
 
+ANSI_ESCAPE = __import__('re').compile(r'\x1b\[[0-9;]*m')
+
 @app.route("/logs-stream")
 def get_logs_stream():
-    """Returns logs as JSON for smooth streaming - only new logs since last_index"""
+    """Returns plain-text logs as JSON for smooth streaming"""
     last_index = request.args.get('since', 0, type=int)
     new_logs = logs[last_index:] if last_index < len(logs) else []
-    # Convert ANSI color codes to HTML spans (same as /logs route)
-    html_logs = [conv.convert(line, full=False) for line in new_logs]
+    # Strip ANSI codes - client will apply CSS classes for color
+    plain_logs = [ANSI_ESCAPE.sub('', line) for line in new_logs]
     return jsonify({
-        "logs": html_logs,
+        "logs": plain_logs,
         "total": len(logs),
         "new_count": len(new_logs)
     })
